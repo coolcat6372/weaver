@@ -1,6 +1,7 @@
 (library (utf)
 
 (export utf8-sequence-length
+        utf8-cumulative-sequence-length
         utf8-bytes->codepoint
         utf8-bytes->char)
 
@@ -14,6 +15,12 @@
     ((= (bitwise-and leading-byte #b11110000) #b11100000) 3) ; 1110xxxx
     ((= (bitwise-and leading-byte #b11111000) #b11110000) 4) ; 11110xxx
     (else (error "utf8-sequence-length" "invalid utf-8 leading byte"))))
+
+(define (utf8-cumulative-sequence-length bv offset count)
+  (if (or (= count 0))
+    0
+    (let ((seq-len (utf8-sequence-length (bytevector-u8-ref bv offset))))
+      (+ seq-len (utf8-cumulative-sequence-length bv (+ offset seq-len) (- count 1))))))
 
 ; Decodes a UTF-8 sequence from a bytevector at a given offset into a codepoint integer.
 ; `bv`     - bytevector containing the sequence
